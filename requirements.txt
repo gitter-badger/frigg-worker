@@ -6,6 +6,7 @@ pyyaml
 redis
 requests
 raven
+rob
 
 # testing tools
 pytest

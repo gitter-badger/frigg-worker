@@ -4,11 +4,13 @@ import os
 import yaml
 import logging
 
+from rob.mixins import AutosaveMixin
+from rob.objects import JsonObject
 from fabric.context_managers import lcd
 from frigg import api
 
 from frigg.helpers import local_run, detect_test_runners, cached_property
-from .config import config, sentry
+from .config import config, sentry, redis_client
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +37,10 @@ class Result(object):
         return obj.__dict__
 
 
-class Build(object):
+class Build(JsonObject, AutosaveMixin):
+    HASH_KEY = 'frigg:builds'
+    redis = redis_client()
+
     id = ''
     results = []
     cloned = False
@@ -49,6 +54,7 @@ class Build(object):
 
     def __init__(self, build_id, obj):
         self.__dict__.update(obj)
+        self.key = build_id
         self.id = build_id
         self.results = []
 

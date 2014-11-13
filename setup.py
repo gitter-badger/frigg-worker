@@ -17,7 +17,8 @@ setup(
         'redis',
         'pyyaml',
         'requests',
-        'raven'
+        'raven',
+        'rob'
     ],
     entry_points={
         'console_scripts': ['frigg-worker = frigg.worker.cli:main']
