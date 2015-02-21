@@ -4,6 +4,7 @@
 frigg-common
 redis
 raven
+docker-py
 
 # testing tools
 pytest

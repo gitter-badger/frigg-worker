@@ -1,5 +1,6 @@
 # -*- coding: utf8 -*-
 import logging
+from frigg_worker.docker_manager import Docker
 import random
 import time
 
@@ -23,7 +24,9 @@ def fetcher():
 def start_build(task):
     build = Build(task['id'], task)
     logger.info('Starting %s' % task)
-    build.run_tests()
+
+    with Docker() as docker:
+        build.run_tests(docker.run)
 
 
 def fetch_task():

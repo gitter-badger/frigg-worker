@@ -67,31 +67,34 @@ class Build(object):
     def settings(self):
         return build_settings(self.working_directory)
 
-    def run_tests(self):
-        self.delete_working_dir()
-        if not self.clone_repo():
+    def get_tasks(self, runner):
+        return []
+
+    def run_tests(self, runner=local_run):
+        self.delete_working_dir(runner)
+        if not self.clone_repo(runner):
             return self.error('git clone', 'Access denied')
 
         try:
-            for task in self.settings['tasks']:
-                self.run_task(task)
+            for task in self.get_tasks(runner):
+                self.run_task(task, runner)
 
-            if self.settings['coverage']:
-                self.coverage = parse_coverage(
-                    os.path.join(self.working_directory, self.settings['coverage']['path']),
-                    self.settings['coverage']['parser']
-                )
+            #if self.settings['coverage'] and 1 > 3:
+            #    self.coverage = parse_coverage(
+            #        os.path.join(self.working_directory, self.settings['coverage']['path']),
+            #        self.settings['coverage']['parser']
+            #    )
 
         except Exception as e:
             self.error('', e)
             sentry.captureException()
             logger.error('Build nr. %s failed\n%s' % (self.id, e.message))
         finally:
-            self.delete_working_dir()
+            self.delete_working_dir(runner)
             self.report_run()
             logger.info("Run of build %s finished." % self.id)
 
-    def clone_repo(self, depth=1):
+    def clone_repo(self, runner, depth=1):
         command_options = {
             'depth': depth,
             'url': self.clone_url,
@@ -99,11 +102,12 @@ class Build(object):
             'branch': self.branch,
             'pr_id': self.pull_request_id
         }
+
         if self.pull_request_id is None:
-            clone = local_run("git clone --depth=%(depth)s --branch=%(branch)s "
-                              "%(url)s %(pwd)s" % command_options)
+            clone = runner("git clone --depth=%(depth)s --branch=%(branch)s "
+                           "%(url)s %(pwd)s" % command_options)
         else:
-            clone = local_run(
+            clone = runner(
                 ("git clone --depth=%(depth)s %(url)s %(pwd)s && cd %(pwd)s "
                  "&& git fetch origin pull/%(pr_id)s/head:pull-%(pr_id)s "
                  "&& git checkout pull-%(pr_id)s") % command_options
@@ -113,20 +117,21 @@ class Build(object):
             logger.error(message)
         return clone.succeeded
 
-    def run_task(self, task_command):
-        run_result = local_run(task_command, self.working_directory)
+    def run_task(self, task_command, runner):
+        run_result = runner(task_command, self.working_directory)
         self.results.append(Result(task_command, run_result))
 
-    def delete_working_dir(self):
+    def delete_working_dir(self, runner):
         if os.path.exists(self.working_directory):
-            local_run("rm -rf %s" % self.working_directory)
+            runner("rm -rf %s" % self.working_directory)
 
     def error(self, task, message):
         self.results.append(Result(task, error=message))
         self.errored = True
 
     def report_run(self):
-        return api.report_run(self.id, json.dumps(self, default=Build.serializer)).status_code
+        return "OK"
+        #return api.report_run(self.id, json.dumps(self, default=Build.serializer)).status_code
 
     @classmethod
     def serializer(cls, obj):
