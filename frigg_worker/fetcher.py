@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 def fetcher(**options):
     options = evaluate_options(options)
-    while True:
+    while options['dispatcher_url']:
         task = fetch_task(options['dispatcher_url'], options['dispatcher_token'])
         if task:
             start_build(task, options)
