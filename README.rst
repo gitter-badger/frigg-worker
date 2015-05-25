@@ -1,6 +1,10 @@
 frigg-worker |Build status| |Coverage status| |reqiuresio|
 ==========================================================
 
+.. image:: https://badges.gitter.im/Join%20Chat.svg
+   :alt: Join the chat at https://gitter.im/frigg/frigg-worker
+   :target: https://gitter.im/frigg/frigg-worker?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
 A worker application that listens to the frigg broker an pick up builds
 and build them.
 
